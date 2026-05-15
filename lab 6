@@ -1,0 +1,139 @@
+Step 2: Create the manifest file manifest.json
+{
+&quot;name&quot;: &quot;Stock Display&quot;,
+&quot;short_name&quot;: &quot;Stock-Display&quot;,
+&quot;display&quot;: &quot;standalone&quot;, &quot;start_url&quot;: &quot;/&quot;,
+&quot;id&quot;: &quot;/&quot;,
+&quot;description&quot;: &quot;Display stock from json file&quot;, &quot;icons&quot;: [
+{
+&quot;src&quot;: &quot;assets/logo.png&quot;, &quot;type&quot;: &quot;image/png&quot;,
+&quot;sizes&quot;: &quot;512x512&quot;, &quot;purpose&quot;: &quot;maskable&quot;
+},
+{
+&quot;src&quot;: &quot;assets/logo.png&quot;, &quot;type&quot;: &quot;image/png&quot;,
+&quot;sizes&quot;: &quot;512x512&quot;,
+&quot;purpose&quot;: &quot;any&quot;
+}
+],
+&quot;background_color&quot;: &quot;#00AA00&quot;,
+&quot;theme_color&quot;: &quot;#00CC00&quot;
+}
+Step 3: Create the service worker file sw.js 
+self.addEventListener(&quot;install&quot;, (e) =&gt; { console.log(&quot;installed&quot;);
+ 
+
+caches.open(&quot;stock&quot;)
+.then((cache) =&gt; { cache.add(&quot;/&quot;);
+cache.add(&quot;./assets/logo.ico&quot;);
+cache.add(&quot;./assets/logo.png&quot;);
+cache.add(&quot;./data.json&quot;);
+
+cache.add(&quot;./index.html&quot;);
+cache.add(&quot;./manifest.json&quot;);
+cache.add(&quot;./sw.js&quot;);
+})
+.catch((err) =&gt; { console.log(err);
+});
+})
+ 
+self.addEventListener(&quot;activate&quot;, (e) =&gt; { console.log(&quot;activated&quot;);
+})
+ 
+self.addEventListener(&quot;fetch&quot;, (e) =&gt; { console.log(&quot;fetched&quot;);
+
+e.respondWith(
+
+.then((res) =&gt; {
+
+return res || fetch(e.request);
+})
+.catch((err) =&gt; { console.log(err);
+})
+
+Step 4: Create a json file and fill some stock market data
+Sample data - https://gist.github.com/tanveery/4ac939d2ad27954da4c8db13e10ef7bd
+data.json
+[
+{
+&quot;company&quot;: &quot;3M&quot;,
+&quot;description&quot;: &quot;3M, based in Minnesota, may be best known for its
+Scotch tape and Post-It Notes, but it also produces sand paper, adhesives,
+medical products, computer screen filters, food safety items, stationery
+products and many products used in automotive, marine, and aircraft
+industries.&quot;,
+&quot;initial_price&quot;: 44.28,
+&quot;price_2002&quot;: 56.27,
+&quot;price_2007&quot;: 95.85, &quot;symbol&quot;: &quot;MMM&quot;
+},
+{
+&quot;company&quot;: &quot;Amazon.com&quot;,
+&quot;description&quot;: &quot;Amazon.com, Inc. is an online retailer in North
+America and internationally. The company serves consumers through its retail
+Web sites and focuses on selection, price, and convenience. It also offers
+programs that enable sellers to sell their products on its Web sites, and their
+own branded Web sites. In addition, the company serves developer customers
+
+through Amazon Web Services, which provides access to technology
+infrastructure that developers can use to enable virtually various type of
+business. Further, it manufactures and sells the Kindle
+e-reader. Founded in 1994 and headquartered in Seattle, Washington.&quot;,
+&quot;initial_price&quot;: 89.38,
+&quot;price_2002&quot;: 17.01,
+&quot;price_2007&quot;: 93.43, &quot;symbol&quot;: &quot;AMZN&quot;
+},
+]
+Step 5: Create a html page to register the service worker and display the stock market data
+index.html
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Stock Display&lt;/title&gt;
+&lt;link rel=&quot;manifest&quot; href=&quot;manifest.json&quot;&gt;
+&lt;style&gt;
+table{
+border-collapse: collapse;
+}
+td, th {
+padding: 1em;
+border: 1px solid black;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;
+&lt;h2&gt;Stock Market Data Display&lt;/h2&gt;
+&lt;div id=&quot;stock&quot;&gt;&lt;/div&gt;
+&lt;/center&gt;
+&lt;script&gt;
+if(&#39;serviceWorker&#39; in navigator) { navigator.serviceWorker.register(&quot;sw.js&quot;)
+.then((e) =&gt; {
+if(e.active === null){ console.log(&quot;registered&quot;);
+}
+});
+} else {
+console.log(&quot;browser does not support service worker&quot;);
+}
+
+fetch(&quot;data.json&quot;)
+.then((res) =&gt; { 
+    return res.json();
+
+})
+.then((stock) =&gt; {
+// creating the table for displaying the stock data var table = &quot;&lt;table&gt;&quot;;
+table += &quot;&lt;tr&gt;&lt;th&gt;Company&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;th&gt;Initial Price&lt;/th&gt;&lt;th&gt;Price in
+2007&lt;/th&gt;&lt;th&gt;Symbol&lt;/th&gt;&lt;/tr&gt;&quot;;
+ 
+for(item of stock) { table +=
+&quot;&lt;tr&gt;&lt;td&gt;&quot;+item.company+&quot;&lt;/td&gt;&lt;td&gt;&quot;+item.description+&quot;&lt;/td&gt;&lt;td&gt;&quot;+item.init
+ial_price+&quot;&lt;/td&gt;&lt;td&gt;&quot;+item.price_2007+&quot;&lt;/td&gt;&lt;td&gt;&quot;+item.symbol+&quot;&lt;/td&gt;&lt;/tr&gt;&quot;
+;
+}
+ 
+table += &quot;&lt;/table&gt;&quot;;
+ 
+// inserting the table into html document.getElementById(&quot;stock&quot;).innerHTML = table;
+})
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
